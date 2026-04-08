@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Навчальний портал | Авторизація</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-container { background-color: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; width: 100%; max-width: 350px; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 12px; background-color: #2c3e50; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; }
+        button:disabled { background-color: #95a5a6; cursor: not-allowed; }
+        #message { font-size: 14px; margin-top: 15px; display: none; }
+        .error { color: #e74c3c; }
+        .success { color: #27ae60; }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <h2>Вхід у систему</h2>
+    <input type="text" id="loginField" placeholder="Логін">
+    <input type="password" id="passField" placeholder="Пароль">
+    <button id="loginBtn" onclick="attemptLogin()">Увійти</button>
+    <div id="message"></div>
+</div>
+
+<script>
+    // СЮДИ ВСТАВТЕ ВАШ URL З GOOGLE APPS SCRIPT
+    const GOOGLE_SCRIPT_URL = "ТВІЙ_URL_З_APPS_SCRIPT";
+
+    async function attemptLogin() {
+        const login = document.getElementById("loginField").value.trim();
+        const password = document.getElementById("passField").value.trim();
+        const msgDiv = document.getElementById("message");
+        const btn = document.getElementById("loginBtn");
+
+        if (!login || !password) {
+            showMessage("Введіть логін та пароль", "error");
+            return;
+        }
+
+        // Блокуємо кнопку під час завантаження
+        btn.disabled = true;
+        btn.innerText = "Перевірка...";
+
+        try {
+            // Відправляємо запит у Google Sheets
+            const response = await fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                // Використовуємо text/plain для обходу жорстких налаштувань CORS у браузерах
+                headers: { "Content-Type": "text/plain" }, 
+                body: JSON.stringify({ login: login, password: password })
+            });
+
+            const result = await response.json();
+
+            if (result.status === "success") {
+                showMessage(`Вітаємо, ${result.name}! Вхід успішний.`, "success");
+                
+                // Зберігаємо дані в пам'ять браузера
+                localStorage.setItem("user_login", login);
+                localStorage.setItem("user_name", result.name);
+                localStorage.setItem("user_level", result.level); // Рівень доступу
+
+                // Затримка 1 сек і перехід на головну сторінку з уроками
+                setTimeout(() => {
+                    window.location.href = "dashboard.html"; 
+                }, 1000);
+            } else {
+                showMessage(result.message, "error"); // "Невірний логін або пароль"
+                btn.disabled = false;
+                btn.innerText = "Увійти";
+            }
+        } catch (error) {
+            showMessage("Помилка з'єднання з сервером", "error");
+            btn.disabled = false;
+            btn.innerText = "Увійти";
+        }
+    }
+
+    function showMessage(text, type) {
+        const msgDiv = document.getElementById("message");
+        msgDiv.textContent = text;
+        msgDiv.className = type;
+        msgDiv.style.display = "block";
+    }
+</script>
+
+</body>
+</html>

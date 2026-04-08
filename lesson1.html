@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Адаптація день 1 | Навчальний портал</title>
+    <title>Адаптація день 1 | Wood Agency</title>
     <style>
         :root { --primary-wood: #8B5A2B; --dark-green: #2E4A3D; --light-bg: #F9F6F0; --text-dark: #333333; --border-color: #E5E0D8; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--light-bg); color: var(--text-dark); margin: 0; line-height: 1.6; }
@@ -41,7 +41,7 @@
 <body>
 
 <header>
-    <h1 style="margin: 0; font-size: 20px;">Адаптація: День 1</h1>
+    <h1 style="margin: 0; font-size: 20px;">🌲 Wood Agency | Адаптація: День 1</h1>
     <div id="userNameDisplay" style="font-size: 14px; opacity: 0.9;">Співробітник: Завантаження...</div>
 </header>
 
@@ -136,7 +136,7 @@
 
     function openModal() { document.getElementById("quizModal").style.display = "flex"; }
 
-    // Логіка відправки питань
+    // Відправка питань (Оновлено під GET)
     async function sendQuestion() {
         const text = document.getElementById("userQuestions").value.trim();
         const btnAsk = document.getElementById("btnAsk");
@@ -147,16 +147,11 @@
         btnAsk.innerText = "Відправка...";
 
         try {
-            await fetch(GOOGLE_SCRIPT_URL, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify({
-                    action: "sendQuestion",
-                    userName: localStorage.getItem("user_name") || "Невідомий",
-                    lesson: "День 1",
-                    question: text
-                })
-            });
+            const userName = localStorage.getItem("user_name") || "Невідомий";
+            const url = `${GOOGLE_SCRIPT_URL}?action=sendQuestion&userName=${encodeURIComponent(userName)}&lesson=${encodeURIComponent("День 1")}&question=${encodeURIComponent(text)}`;
+            
+            await fetch(url);
+            
             alert("Ваше питання успішно надіслано і збережено!");
             document.getElementById("userQuestions").value = "";
         } catch (error) {
@@ -167,7 +162,7 @@
         }
     }
 
-    // Логіка перевірки тесту
+    // Перевірка тесту (Оновлено під GET)
     async function submitTest() {
         const correctAnswers = { q1: "B", q2: "B", q3: "D" };
         let score = 0; let total = 3;
@@ -190,25 +185,18 @@
         submitBtn.innerText = "Перевірка...";
 
         try {
+            const userLogin = localStorage.getItem("user_login") || "test_user";
+            const url = `${GOOGLE_SCRIPT_URL}?action=saveProgress&login=${encodeURIComponent(userLogin)}&lesson=${encodeURIComponent("День 1")}&score=${score}`;
+            
             // Відправляємо прогрес у базу
-            await fetch(GOOGLE_SCRIPT_URL, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain" },
-                body: JSON.stringify({
-                    action: "saveProgress",
-                    login: localStorage.getItem("user_login") || "test_user",
-                    lesson: "День 1",
-                    score: score
-                })
-            });
+            await fetch(url);
 
             resultBox.style.display = "block";
             if (score >= 2) {
                 resultBox.className = "success-msg";
                 resultBox.innerHTML = `Ви відповіли правильно на ${score} з ${total}.<br><br>Вітаю! Доступ до наступного уроку відкриється завтра о 10:00. Завтра будемо ознайомлюватись з "ПЕРЕЛІК ТЕМ"`;
-                submitBtn.innerText = "Закрити тест";
-                submitBtn.disabled = false;
-                submitBtn.onclick = () => window.location.href = "dashboard.html";
+                submitBtn.innerText = "Урок пройдено ✅";
+                submitBtn.disabled = true;
             } else {
                 resultBox.className = "error-msg";
                 resultBox.innerHTML = `Ви відповіли правильно на ${score} з ${total}. Для проходження потрібно мінімум 2. Спробуйте ще раз.`;

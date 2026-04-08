@@ -7,8 +7,8 @@
     <style>
         :root {
             --primary-wood: #8B5A2B; /* Теплий колір дерева */
-            --dark-green: #2E4A3D;   /* Колір хвої/еко */
-            --light-bg: #F9F6F0;     /* Світлий фон під дерево */
+            --dark-green: #2E4A3D;   /* Колір хвої */
+            --light-bg: #F9F6F0;     /* Світлий фон */
             --text-dark: #333333;
             --text-light: #777777;
         }
@@ -27,7 +27,7 @@
 
         .login-card { 
             background-color: #ffffff; 
-            padding: 40px 40px 50px; 
+            padding: 40px; 
             border-radius: 12px; 
             box-shadow: 0 10px 30px rgba(139, 90, 43, 0.15); 
             text-align: center; 
@@ -35,10 +35,6 @@
             max-width: 380px; 
             border-top: 5px solid var(--primary-wood);
             box-sizing: border-box;
-        }
-
-        .logo-area {
-            margin-bottom: 30px;
         }
 
         .logo-icon {
@@ -105,19 +101,9 @@
             margin-top: 10px;
         }
 
-        button:hover { 
-            background-color: #1f332a; 
-        }
-
-        button:active {
-            transform: scale(0.98);
-        }
-
-        button:disabled { 
-            background-color: #95a5a6; 
-            cursor: not-allowed; 
-            transform: none;
-        }
+        button:hover { background-color: #1f332a; }
+        button:active { transform: scale(0.98); }
+        button:disabled { background-color: #95a5a6; cursor: not-allowed; transform: none; }
 
         #message { 
             font-size: 14px; 
@@ -128,43 +114,20 @@
             font-weight: 500;
         }
 
-        .error { 
-            background-color: #feeceb;
-            color: #e74c3c; 
-            border: 1px solid #f5c6c4;
-        }
-
-        .success { 
-            background-color: #eafaf1;
-            color: #27ae60; 
-            border: 1px solid #c3f0d5;
-        }
+        .error { background-color: #feeceb; color: #e74c3c; border: 1px solid #f5c6c4; }
+        .success { background-color: #eafaf1; color: #27ae60; border: 1px solid #c3f0d5; }
         
-        .footer-links {
-            margin-top: 25px;
-            font-size: 13px;
-        }
-        
-        .footer-links a {
-            color: var(--primary-wood);
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-        
-        .footer-links a:hover {
-            color: var(--dark-green);
-            text-decoration: underline;
-        }
+        .footer-links { margin-top: 25px; font-size: 13px; }
+        .footer-links a { color: var(--primary-wood); text-decoration: none; transition: color 0.2s; }
+        .footer-links a:hover { color: var(--dark-green); text-decoration: underline; }
     </style>
 </head>
 <body>
 
 <div class="login-card">
-    <div class="logo-area">
-        <div class="logo-icon">🌲</div>
-        <h2>Wood Agency</h2>
-        <p class="subtitle">Адаптація для нових співробітників</p>
-    </div>
+    <div class="logo-icon">🌲</div>
+    <h2>Wood Agency</h2>
+    <p class="subtitle">Адаптація для нових співробітників</p>
 
     <div class="input-group">
         <label for="loginField">ЛОГІН</label>
@@ -186,8 +149,9 @@
 
 <script>
     // Ваше посилання на Google Apps Script
-   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzHbCDUOeyr_Kt3Hm0I7AOmsT_8xGPDruz5SG4b0TcVXkiAm5qGMUJLgR0oXZK2MTkt/exec";
-    // Додаємо можливість натискати Enter для входу
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzHbCDUOeyr_Kt3Hm0I7AOmsT_8xGPDruz5SG4b0TcVXkiAm5qGMUJLgR0oXZK2MTkt/exec";
+
+    // Дозволяємо входити по натисканню клавіші Enter
     document.getElementById("passField").addEventListener("keypress", function(event) {
         if (event.key === "Enter") {
             event.preventDefault();
@@ -198,7 +162,6 @@
     async function attemptLogin() {
         const login = document.getElementById("loginField").value.trim();
         const password = document.getElementById("passField").value.trim();
-        const msgDiv = document.getElementById("message");
         const btn = document.getElementById("loginBtn");
 
         if (!login || !password) {
@@ -206,41 +169,36 @@
             return;
         }
 
-        // Анімація завантаження на кнопці
         btn.disabled = true;
         btn.innerHTML = "⏳ Перевірка даних...";
 
         try {
-            // Відправка POST-запиту в Google Таблицю
-            const response = await fetch(GOOGLE_SCRIPT_URL, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain" }, 
-                body: JSON.stringify({ login: login, password: password })
-            });
-
+            // Формуємо URL з параметрами для GET-запиту (це вирішує проблему CORS)
+            const urlWithParams = `${GOOGLE_SCRIPT_URL}?action=login&login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`;
+            
+            const response = await fetch(urlWithParams);
             const result = await response.json();
 
             if (result.status === "success") {
                 showMessage(`Вітаємо, ${result.name}!`, "success");
                 btn.innerHTML = "✅ Успішно";
                 
-                // Зберігаємо дані сесії
+                // Зберігаємо дані в пам'ять браузера
                 localStorage.setItem("user_login", login);
                 localStorage.setItem("user_name", result.name);
                 localStorage.setItem("user_level", result.level);
 
-                // Через 1.5 секунди перекидаємо на сторінку з уроками
+                // Через 1.5 секунди перекидаємо на сторінку дашборду (список уроків)
                 setTimeout(() => {
                     window.location.href = "dashboard.html"; 
                 }, 1500);
             } else {
-                // Якщо скрипт повернув помилку (невірний логін/пароль)
-                showMessage("Невірний логін або пароль", "error");
+                showMessage(result.message || "Невірний логін або пароль", "error");
                 btn.disabled = false;
                 btn.innerHTML = "Увійти в систему";
             }
         } catch (error) {
-            console.error("Помилка:", error);
+            console.error("Деталі помилки:", error);
             showMessage("Помилка підключення до бази даних. Спробуйте ще раз.", "error");
             btn.disabled = false;
             btn.innerHTML = "Увійти в систему";
